@@ -15,6 +15,8 @@ export const companySchema = z.object({
   sector: z.string().min(1, "sector_required"),
   kbli: z.string().length(5, "kbli_invalid"),
   nib: z.string().length(13, "nib_invalid"),
+  established_year: z.number({ required_error: "established_year_required", invalid_type_error: "established_year_invalid" }).int().min(1900, "established_year_invalid").max(new Date().getFullYear(), "established_year_invalid"),
+  employee_count: z.number({ required_error: "employee_count_required", invalid_type_error: "employee_count_invalid" }).int().min(0, "employee_count_invalid"),
   certifications: z.array(z.string()).optional(),
   umkm_organization_id: z.number().optional().nullable(),
   logo: z.any().optional(),

@@ -51,50 +51,57 @@ class MachineController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'code' => ['required', 'string', 'unique:machines,code'],
-            'type' => ['required', 'string'],
-            'brand' => ['nullable', 'string'],
+            'name'        => ['required', 'string', 'max:255'],
+            'code'        => ['required', 'string', 'unique:machines,code'],
+            'type'        => ['required', 'string'],
+            'brand'       => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
-            'location' => ['nullable', 'string'],
+            'location'    => ['nullable', 'string'],
             'hourly_rate' => ['required', 'numeric', 'min:0'],
-            'owner_id' => ['required', 'integer'],
-            'owner_type' => [
+            'owner_id'    => ['required', 'integer'],
+            'owner_type'  => [
                 'required',
                 'in:umkm,institution,organization',
             ],
+            'image'       => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
         try {
             $ownerType = match ($validated['owner_type']) {
-                'umkm' => \App\Models\Umkm\Umkm::class,
-                'institution' => \App\Models\Master\Institution::class,
+                'umkm'         => \App\Models\Umkm\Umkm::class,
+                'institution'  => \App\Models\Master\Institution::class,
                 'organization' => \App\Models\Master\Organization::class,
-                default => \App\Models\Master\Organization::class,
+                default        => \App\Models\Master\Organization::class,
             };
 
+            $imagePath = null;
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('machines', 'public');
+            }
+
             $machine = Machine::create([
-                'name' => $validated['name'],
-                'slug' => \Illuminate\Support\Str::slug($validated['name'] . '-' . $validated['code']),
-                'code' => $validated['code'],
-                'type' => $validated['type'],
-                'brand' => $validated['brand'] ?? null,
+                'name'        => $validated['name'],
+                'slug'        => \Illuminate\Support\Str::slug($validated['name'] . '-' . $validated['code']),
+                'code'        => $validated['code'],
+                'type'        => $validated['type'],
+                'brand'       => $validated['brand'] ?? null,
                 'description' => $validated['description'] ?? null,
-                'location' => $validated['location'] ?? null,
+                'location'    => $validated['location'] ?? null,
+                'image'       => $imagePath,
                 'hourly_rate' => $validated['hourly_rate'],
-                'owner_id' => $validated['owner_id'],
-                'owner_type' => $ownerType,
-                'status' => 'available',
+                'owner_id'    => $validated['owner_id'],
+                'owner_type'  => $ownerType,
+                'status'      => 'available',
             ]);
 
             return response()->json([
                 'message' => 'Machine registered successfully',
-                'data' => new MachineResource($machine),
+                'data'    => new MachineResource($machine),
             ], 201);
         } catch (Throwable $e) {
             Log::error('Machine store error', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'trace'   => $e->getTraceAsString(),
             ]);
 
             return response()->json([
@@ -113,12 +120,42 @@ class MachineController extends Controller
         } catch (Throwable $e) {
             Log::error('Machine show error', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'trace'   => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'message' => 'Failed to fetch machine',
             ], 500);
+        }
+    }
+
+    /**
+     * Return active reservations (pending + approved) for a specific machine
+     * so the requester can see when the machine is busy.
+     */
+    public function schedule(Machine $machine): JsonResponse
+    {
+        try {
+            $reservations = $machine->reservations()
+                ->whereIn('status', ['pending', 'approved'])
+                ->where('end_time', '>=', now())
+                ->orderBy('start_time')
+                ->get(['id', 'start_time', 'end_time', 'status', 'requester_umkm_id']);
+
+            return response()->json([
+                'data' => $reservations->map(fn($r) => [
+                    'id'         => $r->id,
+                    'start_time' => $r->start_time,
+                    'end_time'   => $r->end_time,
+                    'status'     => $r->status,
+                ]),
+            ]);
+        } catch (Throwable $e) {
+            Log::error('Machine schedule error', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json(['message' => 'Failed to fetch schedule'], 500);
         }
     }
 }

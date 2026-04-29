@@ -9,10 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ReservationApproval extends Model
 {
     protected $fillable = [
-        'reservation_id',
-        'user_id',
-        'status',
-        'notes',
+        'reservation_id',   // FK → machine_reservations.id
+        'user_id',          // FK → users.id (the approver)
+        'status',           // approved | rejected
+        'notes',            // optional comment
     ];
 
     public function reservation(): BelongsTo

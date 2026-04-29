@@ -12,9 +12,9 @@ import {
   Factory,
   Settings2,
   Building2,
-  Save,
   CheckCircle2,
-  Info
+  Info,
+  FileText
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
@@ -260,6 +260,15 @@ export default function TechnicalProfilePage() {
             title="Profil teknis produksi"
             subtitle="Pusat manajemen kapasitas operasional dan aset permesinan UMKM."
             icon={Wrench}
+            actions={
+                <Button 
+                    variant="outline" 
+                    onClick={() => window.open(`/id/document/umkm/${umkm.id}`, '_blank')} 
+                    className="gap-2 rounded-xl text-primary border-primary/20 hover:bg-primary/5 font-bold shadow-sm"
+                >
+                    <FileText size={16} /> Cetak Resume UMKM
+                </Button>
+            }
         >
             <div className="space-y-8">
                 {status && (

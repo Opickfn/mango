@@ -180,22 +180,23 @@ class ReservationService
                 $user,
                 $data
             ) {
-                $status = $data['action'] === 'approve'
-                    ? 'approved'
-                    : 'rejected';
+                $isApprove = $data['action'] === 'approve';
+                $status    = $isApprove ? 'approved' : 'rejected';
 
+                // Update the reservation status + store rejection reason if rejected
                 $reservation->update([
-                    'status' => $status,
-                    'rejection_reason' => $data['action'] === 'reject'
-                            ? ($data['comment'] ?? null)
-                            : null,
+                    'status'           => $status,
+                    'rejection_reason' => ! $isApprove
+                        ? ($data['comment'] ?? null)
+                        : null,
                 ]);
 
+                // Record the approval log — column names match reservation_approvals table
                 ReservationApproval::create([
-                    'machine_reservation_id' => $reservation->id,
-                    'approver_user_id' => $user->id,
-                    'action' => $data['action'],
-                    'comment' => $data['comment'] ?? null,
+                    'reservation_id' => $reservation->id,
+                    'user_id'        => $user->id,
+                    'status'         => $status,
+                    'notes'          => $data['comment'] ?? null,
                 ]);
 
                 return $reservation->fresh();

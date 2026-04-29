@@ -16,7 +16,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   MessageSquarePlus,
-  ArrowLeft
+  ArrowLeft,
+  Download
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "@/src/i18n/navigation";
@@ -48,7 +49,7 @@ export default function ResultPage() {
       subtitle="Berdasarkan jawaban Anda, berikut adalah profil kematangan dan rekomendasi pendampingan."
       icon={Trophy}
     >
-      <div className="mb-6">
+      <div className="mb-6 flex justify-between items-center">
         <Button 
           variant="ghost" 
           onClick={() => router.push('/workspace/umkm/assessment')}
@@ -56,6 +57,15 @@ export default function ResultPage() {
         >
           <ArrowLeft size={18} />
           Kembali ke Assessment
+        </Button>
+        
+        <Button 
+          variant="outline"
+          onClick={() => window.open(`/id/document/assessment/${data.id}`, '_blank')}
+          className="rounded-xl gap-2 border-primary/30 text-primary hover:bg-primary/5 font-bold"
+        >
+          <Download size={16} />
+          Unduh Hasil (PDF)
         </Button>
       </div>
 

@@ -38,6 +38,8 @@ export const useOnboarding = () => {
       sector: "Manufaktur",
       kbli: "",
       nib: "",
+      established_year: undefined,
+      employee_count: undefined,
       umkm_organization_id: 0,
     },
   });
@@ -80,6 +82,8 @@ export const useOnboarding = () => {
                 sector: user.umkm.sector || "Manufaktur",
                 kbli: user.umkm.kbli || "",
                 nib: user.umkm.nib || "",
+                established_year: user.umkm.established_year || undefined,
+                employee_count: user.umkm.employee_count ?? undefined,
                 umkm_organization_id: user.umkm.umkm_organization_id || 0,
               });
 

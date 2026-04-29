@@ -5,7 +5,7 @@ import { api } from "@/src/lib/http/axios";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
-import { Loader2, Calendar, Star, TrendingUp, X } from "lucide-react";
+import { Loader2, Calendar, Star, TrendingUp, X, Download } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import MaturityChart from "../../../workspace/umkm/assessment/components/MaturityChart";
@@ -96,9 +96,18 @@ export default function UmkmAssessmentDetail({ umkmId, onClose }: UmkmAssessment
                           Sesi Assessment: {format(new Date(selectedAssessment.created_at), "eeee, dd MMMM yyyy HH:mm", { locale: id })}
                         </p>
                       </div>
-                      <div className="bg-primary text-white p-4 rounded-3xl text-center min-w-[120px] shadow-lg shadow-primary/20">
-                        <p className="text-[10px] font-bold uppercase opacity-80">Skor Total</p>
-                        <p className="text-3xl font-black">{selectedAssessment.total_score}</p>
+                      <div className="flex flex-col gap-3">
+                        <div className="bg-primary text-white p-4 rounded-3xl text-center min-w-[120px] shadow-lg shadow-primary/20">
+                          <p className="text-[10px] font-bold uppercase opacity-80">Skor Total</p>
+                          <p className="text-3xl font-black">{selectedAssessment.total_score}</p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          onClick={() => window.open(`/id/document/assessment/${selectedAssessment.id}`, '_blank')}
+                          className="rounded-xl border-primary/30 text-primary hover:bg-primary/5 text-xs font-bold gap-2 h-9"
+                        >
+                          <Download size={14} /> PDF
+                        </Button>
                       </div>
                     </div>
 

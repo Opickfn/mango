@@ -22,17 +22,27 @@ class ReservationController extends Controller
     {
         try {
             $reservations = $this->service->getReservations($request->all());
-
             return response()->json($reservations);
         } catch (Throwable $e) {
-            Log::error('Machine reservation index error', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+            Log::error('Machine reservation index error', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Failed to fetch reservations'], 500);
+        }
+    }
 
+    public function show(MachineReservation $reservation): JsonResponse
+    {
+        try {
             return response()->json([
-                'message' => 'Failed to fetch reservations',
-            ], 500);
+                'data' => $reservation->load([
+                    'machine',
+                    'requesterUmkm',
+                    'requesterUser',
+                    'approvals',
+                ]),
+            ]);
+        } catch (Throwable $e) {
+            Log::error('Machine reservation show error', ['message' => $e->getMessage()]);
+            return response()->json(['message' => 'Failed to fetch reservation'], 500);
         }
     }
 

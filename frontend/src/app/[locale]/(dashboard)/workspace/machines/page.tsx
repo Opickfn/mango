@@ -1,13 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import api from "@/src/lib/http/axios";
 import { 
   Loader2, 
-  Package,
   Plus,
-  Pencil,
-  Trash2,
   Save,
   Wrench,
   Tag,
@@ -16,7 +13,9 @@ import {
   AlertCircle,
   CheckCircle2,
   X,
-  Building2
+  Camera,
+  Upload,
+  Image as ImageIcon
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Alert, AlertDescription } from "@/src/components/ui/alert";
@@ -51,6 +50,10 @@ export default function MachineCatalogPage() {
     const [userContext, setUserContext] = useState<any>(null);
     const [status, setStatus] = useState<{ type: "success" | "destructive"; message: string } | null>(null);
 
+    const imageInputRef = useRef<HTMLInputElement>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+
     const [form, setForm] = useState({
         name: "",
         code: "",
@@ -69,7 +72,6 @@ export default function MachineCatalogPage() {
             setUserContext(userData);
 
             const machRes = await api.get("/v1/machines");
-            // Only show machines owned by the current user
             const ownerType = userData.roles?.includes('upt') ? 'App\\Models\\Master\\Organization' : 'App\\Models\\Umkm\\Umkm';
             const ownerId = userData.roles?.includes('upt') ? userData.organizations?.[0]?.id : userData.umkm?.id;
             
@@ -88,16 +90,20 @@ export default function MachineCatalogPage() {
     useEffect(() => { fetchData(); }, [fetchData]);
 
     const openDialog = () => {
-        setForm({
-            name: "",
-            code: "",
-            type: "CNC",
-            brand: "",
-            description: "",
-            location: "",
-            hourly_rate: "0"
-        });
+        setForm({ name: "", code: "", type: "CNC", brand: "", description: "", location: "", hourly_rate: "0" });
+        setImagePreview(null);
+        setImageFile(null);
         setDialogOpen(true);
+    };
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => setImagePreview(reader.result as string);
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -115,10 +121,14 @@ export default function MachineCatalogPage() {
                 return;
             }
 
-            await api.post("/v1/machines", {
-                ...form,
-                owner_type: ownerType,
-                owner_id: ownerId
+            const formData = new FormData();
+            Object.entries(form).forEach(([k, v]) => formData.append(k, v));
+            formData.append('owner_type', ownerType);
+            formData.append('owner_id', String(ownerId));
+            if (imageFile) formData.append('image', imageFile);
+
+            await api.post("/v1/machines", formData, {
+                headers: { "Content-Type": "multipart/form-data" }
             });
             setStatus({ type: "success", message: "Mesin berhasil ditambahkan ke katalog reservasi." });
             setDialogOpen(false);
@@ -184,13 +194,22 @@ export default function MachineCatalogPage() {
                                     key={machine.id} 
                                     className="border-border/50 shadow-sm rounded-[2.5rem] overflow-hidden bg-white hover:border-primary/30 hover:shadow-xl hover:-translate-y-1 transition-all group flex flex-col h-full cursor-pointer"
                                 >
+                                    {/* Machine Image */}
                                     <div className="relative h-48 bg-muted/30 overflow-hidden flex items-center justify-center">
-                                        <Wrench size={64} className="text-muted-foreground/20" />
+                                        {machine.image ? (
+                                            <img
+                                                src={machine.image}
+                                                alt={machine.name}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            />
+                                        ) : (
+                                            <Wrench size={64} className="text-muted-foreground/20" />
+                                        )}
                                         <div className="absolute top-4 right-4">
                                             <Badge className={`rounded-lg font-bold text-[10px] shadow-lg ${
-                                                machine.status === 'active' ? 'bg-success text-white' : 'bg-destructive text-white'
+                                                machine.status === 'available' ? 'bg-success text-white' : 'bg-destructive text-white'
                                             }`}>
-                                                {machine.status === 'active' ? 'Aktif' : 'Tidak Aktif'}
+                                                {machine.status === 'available' ? 'Aktif' : 'Tidak Aktif'}
                                             </Badge>
                                         </div>
                                     </div>
@@ -231,7 +250,41 @@ export default function MachineCatalogPage() {
                         <DialogDescription className="font-medium text-sm">Daftarkan mesin baru yang dapat disewakan.</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleSubmit}>
-                        <div className="p-10 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                        <div className="p-10 max-h-[60vh] overflow-y-auto custom-scrollbar space-y-6">
+
+                            {/* Image Upload */}
+                            <div className="space-y-2">
+                                <Label className="text-xs font-bold text-muted-foreground ml-1">Foto Mesin (Opsional)</Label>
+                                <div
+                                    onClick={() => imageInputRef.current?.click()}
+                                    className={`relative h-40 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 cursor-pointer transition-all overflow-hidden ${
+                                        imagePreview ? 'border-primary/40' : 'border-border hover:border-primary/40 hover:bg-muted/30'
+                                    }`}
+                                >
+                                    {imagePreview ? (
+                                        <>
+                                            <img src={imagePreview} alt="preview" className="absolute inset-0 w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                                <Camera className="text-white" size={28} />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload size={24} className="text-muted-foreground/50" />
+                                            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Klik untuk unggah foto</p>
+                                            <p className="text-[10px] text-muted-foreground">JPG, PNG, WebP — maks. 2MB</p>
+                                        </>
+                                    )}
+                                </div>
+                                <input
+                                    ref={imageInputRef}
+                                    type="file"
+                                    accept="image/jpg,image/jpeg,image/png,image/webp"
+                                    className="hidden"
+                                    onChange={handleImageChange}
+                                />
+                            </div>
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2 md:col-span-2">
                                     <Label className="text-xs font-bold text-muted-foreground ml-1">Nama Mesin</Label>
@@ -267,10 +320,7 @@ export default function MachineCatalogPage() {
 
                                 <div className="space-y-2">
                                     <Label className="text-xs font-bold text-muted-foreground ml-1">Tipe Mesin</Label>
-                                    <Select 
-                                        value={form.type} 
-                                        onValueChange={(val) => setForm({...form, type: val})}
-                                    >
+                                    <Select value={form.type} onValueChange={(val) => setForm({...form, type: val})}>
                                         <SelectTrigger className="h-12 rounded-2xl bg-muted/20 border-transparent focus:bg-background">
                                             <SelectValue placeholder="Pilih Tipe" />
                                         </SelectTrigger>

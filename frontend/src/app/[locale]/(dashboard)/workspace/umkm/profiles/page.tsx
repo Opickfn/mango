@@ -11,7 +11,8 @@ import {
   X,
   Target,
   ChevronRight,
-  CheckCircle2
+  CheckCircle2,
+  FileText
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
@@ -144,9 +145,14 @@ export default function BusinessProfilePage() {
                         </div>
                     </div>
                     {!isEditing && hasProfile && (
-                        <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="gap-2 rounded-lg font-semibold">
-                            <Pencil size={14} /> Edit Profil
-                        </Button>
+                        <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={() => window.open(`/id/document/umkm/${umkm.id}`, '_blank')} className="gap-2 rounded-lg text-primary border-primary/20 hover:bg-primary/5 font-semibold">
+                                <FileText size={14} /> Cetak Resume
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="gap-2 rounded-lg font-semibold">
+                                <Pencil size={14} /> Edit Profil
+                            </Button>
+                        </div>
                     )}
                     {isEditing && hasProfile && (
                         <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} className="gap-2 rounded-lg">

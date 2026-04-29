@@ -180,14 +180,17 @@ Route::prefix('v1')->group(function () {
         Route::prefix('machines')->group(function () {
             Route::get('/', [MachineController::class, 'index']);
             Route::post('/', [MachineController::class, 'store']);
-            Route::get('{machine}', [MachineController::class, 'show']);
 
             Route::prefix('reservations')->group(function () {
                 Route::get('all', [ReservationController::class, 'index']);
                 Route::get('incoming', [ReservationController::class, 'incoming']);
+                Route::get('{reservation}', [ReservationController::class, 'show']);
                 Route::post('/', [ReservationController::class, 'store']);
                 Route::post('{reservation}/approve', [ReservationController::class, 'approve']);
             });
+
+            Route::get('{machine}', [MachineController::class, 'show']);
+            Route::get('{machine}/schedule', [MachineController::class, 'schedule']);
         });
 
         Route::prefix('mentoring')->group(function () {

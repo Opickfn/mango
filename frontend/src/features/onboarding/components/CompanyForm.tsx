@@ -247,6 +247,12 @@ export const CompanyForm = ({ form, onSubmit, isSubmitting, organizations, t, in
             </div>
 
             <div className="space-y-2">
+                <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Jumlah Karyawan</Label>
+                <Input {...register("employee_count", { valueAsNumber: true })} type="number" min={0} placeholder="Contoh: 5" className="h-11 rounded-xl" />
+                {errors.employee_count && <p className="text-[10px] font-bold text-destructive ml-1">{t(`errors.${errors.employee_count.message}`)}</p>}
+            </div>
+
+            <div className="space-y-2">
                 <Label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-1">Afiliasi Organisasi (Jika Ada)</Label>
                 <select {...register("umkm_organization_id", { valueAsNumber: true })} className={`flex h-11 w-full rounded-xl border bg-background px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-0 focus-visible:border-primary ${errors.umkm_organization_id ? 'border-destructive' : 'border-input'}`}>
                     <option value="0">-- Tidak Ada / Mandiri --</option>

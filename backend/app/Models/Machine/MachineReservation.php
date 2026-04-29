@@ -46,6 +46,6 @@ class MachineReservation extends Model
 
     public function approvals(): HasMany
     {
-        return $this->hasMany(ReservationApproval::class);
+        return $this->hasMany(ReservationApproval::class, 'reservation_id');
     }
 }

@@ -19,6 +19,7 @@ class Machine extends Model
         'brand',
         'description',
         'location',
+        'image',
         'owner_id',
         'owner_type',
         'status',
